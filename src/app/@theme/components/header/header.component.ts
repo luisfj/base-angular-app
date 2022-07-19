@@ -1,10 +1,10 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { NbMediaBreakpointsService, NbMenuService, NbSidebarService, NbThemeService } from '@nebular/theme';
-
-import { UserData } from '../../../@core/data/users';
-import { LayoutService } from '../../../@core/utils';
-import { map, takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {NbMediaBreakpointsService, NbMenuService, NbSidebarService, NbThemeService} from '@nebular/theme';
+import {LayoutService} from '../../../@core/utils';
+import {filter, map, takeUntil} from 'rxjs/operators';
+import {Subject} from 'rxjs';
+import {Router} from '@angular/router';
+import {UserDiarioData} from '../../../@core/data/user.diario';
 
 @Component({
   selector: 'ngx-header',
@@ -38,22 +38,24 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   currentTheme = 'default';
 
-  userMenu = [ { title: 'Profile' }, { title: 'Log out' } ];
+  userMenu = [ { title: 'Perfil' }, {title: 'Alterar senha'}, { title: 'Sair' } ];
 
   constructor(private sidebarService: NbSidebarService,
               private menuService: NbMenuService,
               private themeService: NbThemeService,
-              private userService: UserData,
+              private userService: UserDiarioData,
               private layoutService: LayoutService,
-              private breakpointService: NbMediaBreakpointsService) {
+              private breakpointService: NbMediaBreakpointsService,
+              private router: Router) {
   }
 
   ngOnInit() {
     this.currentTheme = this.themeService.currentTheme;
-
-    this.userService.getUsers()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((users: any) => this.user = users.nick);
+     this.userService.getLoggedUser()
+       // .pipe(takeUntil(this.destroy$))
+       .subscribe((res: any) => {
+         this.user = res;
+       });
 
     const { xl } = this.breakpointService.getBreakpointsMap();
     this.themeService.onMediaQueryChange()
@@ -69,6 +71,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe(themeName => this.currentTheme = themeName);
+
+    this.menuService.onItemClick()
+      .pipe(
+        filter(({ tag }) => tag === 'my-context-menu'),
+        map(({ item: { title } }) => title),
+      )
+      .subscribe(title => {
+        if (title === 'Sair') {
+          this.router.navigateByUrl('/auth/logout');
+        } else if (title === 'Alterar senha') {
+          this.router.navigateByUrl('/pages/change-password');
+        } else if (title === 'Perfil') {
+          this.router.navigateByUrl('/pages/profile');
+        }
+      } );
   }
 
   ngOnDestroy() {

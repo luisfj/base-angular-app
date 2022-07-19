@@ -1,53 +1,36 @@
-import { of as observableOf,  Observable } from 'rxjs';
+import {of as observableOf, Observable, BehaviorSubject} from 'rxjs';
 import { Injectable } from '@angular/core';
-import { Contacts, RecentUsers, UserData } from '../data/users';
+import {UserDiario, UserDiarioChangePassword, UserDiarioData} from '../data/user.diario';
+import {HttpClient} from '@angular/common/http';
 
 @Injectable()
-export class UserService extends UserData {
+export class UserDiarioService extends UserDiarioData {
 
-  private time: Date = new Date;
+  private user = new BehaviorSubject({
+    name: 'Loading ...',
+    imageUrl: '/assets/images/default-user-img.png',
+    email: '',
+  });
 
-  private users = {
-    nick: { name: 'Nick Jones', picture: 'assets/images/default-user-img.png' },
-    eva: { name: 'Eva Moor', picture: 'assets/images/eva.png' },
-    jack: { name: 'Jack Williams', picture: 'assets/images/jack.png' },
-    lee: { name: 'Lee Wong', picture: 'assets/images/lee.png' },
-    alan: { name: 'Alan Thompson', picture: 'assets/images/alan.png' },
-    kate: { name: 'Kate Martinez', picture: 'assets/images/kate.png' },
-  };
-  private types = {
-    mobile: 'mobile',
-    home: 'home',
-    work: 'work',
-  };
-  private contacts: Contacts[] = [
-    { user: this.users.nick, type: this.types.mobile },
-    { user: this.users.eva, type: this.types.home },
-    { user: this.users.jack, type: this.types.mobile },
-    { user: this.users.lee, type: this.types.mobile },
-    { user: this.users.alan, type: this.types.home },
-    { user: this.users.kate, type: this.types.work },
-  ];
-  private recentUsers: RecentUsers[]  = [
-    { user: this.users.alan, type: this.types.home, time: this.time.setHours(21, 12)},
-    { user: this.users.eva, type: this.types.home, time: this.time.setHours(17, 45)},
-    { user: this.users.nick, type: this.types.mobile, time: this.time.setHours(5, 29)},
-    { user: this.users.lee, type: this.types.mobile, time: this.time.setHours(11, 24)},
-    { user: this.users.jack, type: this.types.mobile, time: this.time.setHours(10, 45)},
-    { user: this.users.kate, type: this.types.work, time: this.time.setHours(9, 42)},
-    { user: this.users.kate, type: this.types.work, time: this.time.setHours(9, 31)},
-    { user: this.users.jack, type: this.types.mobile, time: this.time.setHours(8, 0)},
-  ];
+  constructor(private httpClient: HttpClient) {
+    super(); }
 
-  getUsers(): Observable<any> {
-    return observableOf(this.users);
+  getLoggedUser(): Observable<UserDiario> {
+    if (this.user.value.name === 'Loading ...')
+      this.forceUpdateLoggedUser();
+    return this.user;
   }
 
-  getContacts(): Observable<Contacts[]> {
-    return observableOf(this.contacts);
+  update(user: UserDiario): Observable<any> {
+    return this.httpClient.post('http://localhost:8080/api/authentication/update', user);
   }
 
-  getRecentUsers(): Observable<RecentUsers[]> {
-    return observableOf(this.recentUsers);
+  forceUpdateLoggedUser(): void {
+    this.httpClient.get<UserDiario>('http://localhost:8080/api/authentication/my-info')
+      .subscribe(user => this.user.next(user));
+  }
+
+  changePassword(user: UserDiarioChangePassword): Observable<any> {
+    return this.httpClient.post('http://localhost:8080/api/authentication/change-password', user);
   }
 }

@@ -1,5 +1,5 @@
 import {NgModule} from '@angular/core';
-import {ProfileComponent} from './profile.component';
+import {ChangePasswordComponent} from './change-password.component';
 import {ThemeModule} from '../../@theme/theme.module';
 import {
   NbActionsModule,
@@ -33,7 +33,7 @@ import {FormsModule as ngFormsModule, ReactiveFormsModule} from '@angular/forms'
         ReactiveFormsModule,
     ],
   declarations: [
-    ProfileComponent,
+    ChangePasswordComponent,
   ],
 })
-export class ProfileModule { }
+export class ChangePasswordModule { }
